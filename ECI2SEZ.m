@@ -9,7 +9,7 @@ function [r1, v1] = ECI2SEZ(r0, v0, rS, phi, t)
     ECEF_R_ECI = ECI_R_ECEF';
     
     R = 6371 + rS;
-    lat = phi * pi / 180;
+    lat = phi ;
     lon = 0; % Assumed 0 as in part a
     
     % Station position in ECEF
@@ -24,12 +24,13 @@ function [r1, v1] = ECI2SEZ(r0, v0, rS, phi, t)
            -cos(lat),  0, sin(lat)];
     ECEF_R_SEZ = Rlon * Rlat;
     SEZ_R_ECEF = ECEF_R_SEZ'; % Inverse is transpose
-    
     % --- Position Transformation ---
     rP_ECEF = ECEF_R_ECI * r0; % Spacecraft in ECEF
     rP_SEZ_rel = rP_ECEF - rS_ECEF; % Relative to station (in ECEF basis)
     r1 = SEZ_R_ECEF * rP_SEZ_rel; % Position in SEZ
     
+    
+
     % --- Velocity Transformation ---
     % v_ECI = v_rel_ECI + (omega_E x r_ECI)
     % v_rel_ECI = v_ECI - (omega_E x r_ECI)
