@@ -1,11 +1,11 @@
 clear
 clc
 
-%% Part a)    This part is correct. Exercise IOD1 was very similar, so we used it
+%% Part a)    This part is correct. Exercise IOD1 was very similar, so we used it. Results are right
 muE=3.986E5;
 t=13.5;
 rS=0.8;
-phi=50;
+phi=50*pi/180;
 rP_2_SEZ=[5369.09; 2332.14; 656.480];
 vP_2_SEZ=[-3.37027; 4.90364; 0.106703];
 r1=rP_2_SEZ;
@@ -16,12 +16,13 @@ v1=vP_2_SEZ;
 % --- SHOW RESULTS ---
 fprintf('\n--- Part (a) Results ---\n');
 
-fprintf('r0:%.6f \n', r0);
-fprintf('v0:%.6f\n', v0);
+
+fprintf('   r_ECI = [%.3f, %.3f, %.3f] km\n', r0(1), r0(2), r0(3));
+fprintf('   v_ECI = [%.5f, %.5f, %.5f] km/s\n', v0(1), v0(2), v0(3));
 
 
 
-%% Part b) Verify
+%% Part b) Code seems fine (rv2coe also). Results are right
 %% COE
 
 r_vec = r0; 
@@ -106,7 +107,7 @@ hold off;
 
 
 
-%% --- PART (C) START --- Verify
+%% --- PART (C) START --- Code seems fine (coe2rv also). Results are right.
 fprintf('\n--- Part (c) Results ---\n');
 
 % -------------------------------------------------------------------------
@@ -126,7 +127,7 @@ tfromP=M_0/ne;  % this is the time that passes from passing from the pericenter 
 theta = nu_1;
 E = theta2E(theta, e);
 M = E - e * sin(E);
-tfromPdef = M/ne-tfromP;  % time from theta0 to current theta
+tfromPdef = M/ne-tfromP;  % time from theta0 to current theta (time from theta0 to theta minus time from pericenter to theta0)
 delta_t1_sec=tfromPdef;
 delta_t1_hr = delta_t1_sec / 3600;
 
@@ -214,7 +215,7 @@ nu_2=E2theta(Eattime,e);
 p_semi = a * (1 - e^2); % Semi-latus rectum
 [r_ECI_6h, v_ECI_6h] = coe2rv(muE, p_semi, e, i_rad, Omega_rad, omega_rad, nu_2);
 
-fprintf('2. State in ECI 6 hours later:\n');
+fprintf('\n 2. State in ECI 6 hours later:\n');
 fprintf('   r_ECI = [%.3f, %.3f, %.3f] km\n', r_ECI_6h(1), r_ECI_6h(2), r_ECI_6h(3));
 fprintf('   v_ECI = [%.5f, %.5f, %.5f] km/s\n', v_ECI_6h(1), v_ECI_6h(2), v_ECI_6h(3));
 
@@ -236,7 +237,7 @@ fprintf('   v_SEZ = [%.5f, %.5f, %.5f] km/s\n', v_SEZ_6h(1), v_SEZ_6h(2), v_SEZ_
 
 
 
-%% --- PART (D) START --- Verify
+%% --- PART (D) START --- Code seems right. Results need to be verified.
 fprintf('\n--- Part (d) Results ---\n');
 
 % 1. Define masses (in kg)
@@ -297,36 +298,28 @@ fprintf('Argument of periapsis (w):    %.4f deg\n', omega_new_deg);
 fprintf('True anomaly (nu):            %.4f deg\n', nu_new_deg);
 
 
-%% --- PART (E) START --- Verify
+%% --- PART (E) START --- Code seems right. Results need to be verified.
 fprintf('\n--- Part (e) Results ---\n');
 
-% 1. Get current radius magnitude (position doesn't change during maneuver)
-r_mag = norm(r_sc_new);
+% 1. Find the radius of the new pericenter
+% Using the semi-major axis (a_new) and eccentricity (e_new) from Part (d)
+r_p = a_new * (1 - e_new);
 
-% 2. Calculate the required magnitude of the circular velocity
-v_circ_mag = sqrt(muE / r_mag);
+% 2. Calculate the velocity at pericenter for the current elliptical orbit
+% Using the Vis-Viva equation
+v_p_elliptical = sqrt(muE * (2/r_p - 1/a_new));
 
-% 3. Determine the direction of the new velocity
-% The orbital plane stays the same, so the specific angular momentum 
-% direction (h_hat) remains unchanged.
-h_vec_new = cross(r_sc_new, v_sc_new);
-h_hat = h_vec_new / norm(h_vec_new);
+% 3. Calculate the velocity required for a circular orbit at that same radius
+% For a circular orbit, v = sqrt(mu/r)
+v_p_circular = sqrt(muE / r_p);
 
-r_hat = r_sc_new / r_mag;
+% 4. Compute the delta-V required
+% Since both velocities are strictly tangential at pericenter, 
+% we just subtract their magnitudes. 
+delta_V = abs(v_p_circular - v_p_elliptical);
 
-% The velocity in a circular orbit is perfectly perpendicular to 'r' 
-% and lies in the orbital plane (perpendicular to 'h')
-v_circ_vec = v_circ_mag * cross(h_hat, r_hat);
-
-% 4. Calculate the Delta-V vector required for the maneuver
-delta_v_vec = v_circ_vec - v_sc_new;
-
-% Calculate the total Delta-V magnitude (cost of the maneuver)
-delta_v_mag = norm(delta_v_vec);
-
-% --- MOSTRAR RESULTADOS EN CONSOLA ---
-fprintf('Target circular velocity vector:\n');
-fprintf('   v_circ = [%.5f, %.5f, %.5f] km/s\n', v_circ_vec(1), v_circ_vec(2), v_circ_vec(3));
-fprintf('Required Delta-V vector:\n');
-fprintf('   Delta_V = [%.5f, %.5f, %.5f] km/s\n', delta_v_vec(1), delta_v_vec(2), delta_v_vec(3));
-fprintf('Total Delta-V magnitude:      %.4f km/s\n', delta_v_mag);
+% --- SHOW RESULTS ---
+fprintf('Radius of new pericenter (r_p):      %.4f km\n', r_p);
+fprintf('Velocity at pericenter (current):    %.5f km/s\n', v_p_elliptical);
+fprintf('Velocity for circular orbit:         %.5f km/s\n', v_p_circular);
+fprintf('Required Delta-V to circularize:     %.5f km/s\n', delta_V);
