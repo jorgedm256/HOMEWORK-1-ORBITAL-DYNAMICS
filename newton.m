@@ -4,7 +4,7 @@ for i=1:maxiter
     fvalue=f(x);
     xnew=x-f(x)/df(x);
     if abs(fvalue)<tol && (xnew-x)/(1+abs(xnew))<tol
-        fprintf("The number of iterations is %f", iter);
+        fprintf("The number of iterations is %.f", iter);
         return
     else
         x=xnew;
